@@ -20,24 +20,17 @@
   var playTimer = 0;
   var keys = [];
   var scrubbing = false;
-  var wordmark = new Image();
-  wordmark.onload = function () { render(); };
-  wordmark.src = "wordmark.png";
-  var MARK = { x: 489, y: 26, size: 76, w: 1024, h: 130 };
+  var MARK_CELLS = [[-21,-2],[-20,-2],[-19,-2],[-18,-2],[-17,-2],[-16,-2],[-15,-2],[-14,-2],[-10,-2],[-9,-2],[-8,-2],[-4,-2],[-3,-2],[-2,-2],[-1,-2],[2,-2],[3,-2],[4,-2],[5,-2],[6,-2],[7,-2],[8,-2],[9,-2],[10,-2],[14,-2],[15,-2],[16,-2],[17,-2],[18,-2],[8,-1],[9,-1],[10,-1],[13,-1],[14,-1],[15,-1],[16,-1],[17,-1],[18,-1],[8,0],[9,0],[10,0],[11,0],[13,0],[14,0],[15,0],[16,0],[18,0],[19,0],[8,1],[9,1],[10,1],[11,1],[12,1],[13,1],[14,1],[15,1],[18,1],[19,1],[-21,2],[-20,2],[-17,2],[-16,2],[-15,2],[-14,2],[-10,2],[-9,2],[-6,2],[-3,2],[-2,2],[1,2],[2,2],[3,2],[4,2],[5,2],[6,2],[7,2],[8,2],[11,2],[12,2],[13,2],[14,2],[15,2],[19,2],[6,3],[12,3]];
+  var MARK_INK = "#8a8484";
 
-  function placeWordmark(ctx, originX, originY, cell) {
-    if (!wordmark.complete || !wordmark.naturalWidth) return;
-    var box = cell * 3;
-    var scale = box / MARK.size;
-    ctx.save();
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = "high";
-    ctx.translate(originX, originY);
-    ctx.scale(scale, scale);
-    ctx.translate(-MARK.x, -MARK.y);
-    ctx.drawImage(wordmark, 0, 0);
-    ctx.restore();
-    ctx.imageSmoothingEnabled = false;
+  function drawWordmark(ctx, originX, originY, cell, focal, cols, rows) {
+    ctx.fillStyle = MARK_INK;
+    MARK_CELLS.forEach(function (mark) {
+      var x = focal[0] + mark[0];
+      var y = focal[1] + mark[1];
+      if (x < 0 || y < 0 || x >= cols || y >= rows) return;
+      ctx.fillRect(originX + x * cell, originY + y * cell, cell, cell);
+    });
   }
 
   function clamp(n, min, max) {
@@ -199,6 +192,7 @@
     target.width = w;
     target.height = h;
     var ctx = target.getContext("2d");
+    ctx.imageSmoothingEnabled = false;
     ctx.clearRect(0, 0, w, h);
     var paperOn = s.bg && !s.clear;
     if (withImage) drawCover(ctx, photo, w, h);
@@ -216,7 +210,7 @@
     });
     var focal = focalCenter(s);
     if (s.wordmark) {
-      placeWordmark(ctx, lay.ox + (focal[0] - 1) * lay.cell, lay.oy + (focal[1] - 1) * lay.cell, lay.cell);
+      drawWordmark(ctx, lay.ox, lay.oy, lay.cell, focal, s.cols, s.rows);
     }
     if (s.crosses) {
       ctx.fillStyle = s.cross;
@@ -541,11 +535,14 @@
     dots.forEach(function (d) {
       parts.push('<rect x="' + (d[0] * cell) + '" y="' + (d[1] * cell) + '" width="' + cell + '" height="' + cell + '" fill="' + s.dot + '"/>');
     });
-    if (s.wordmark && wordmark.src) {
+    if (s.wordmark) {
       var focal = focalCenter(s);
-      var box = cell * 3;
-      var markScale = box / MARK.size;
-      parts.push('<image href="wordmark.png" x="' + ((focal[0] - 1) * cell - MARK.x * markScale) + '" y="' + ((focal[1] - 1) * cell - MARK.y * markScale) + '" width="' + (MARK.w * markScale) + '" height="' + (MARK.h * markScale) + '" preserveAspectRatio="none"/>');
+      MARK_CELLS.forEach(function (mark) {
+        var gx = focal[0] + mark[0];
+        var gy = focal[1] + mark[1];
+        if (gx < 0 || gy < 0 || gx >= s.cols || gy >= s.rows) return;
+        parts.push('<rect x="' + (gx * cell) + '" y="' + (gy * cell) + '" width="' + cell + '" height="' + cell + '" fill="' + MARK_INK + '"/>');
+      });
     }
     if (s.crosses) Object.keys(plus).forEach(function (key) {
       var p = key.split(",");
@@ -646,9 +643,24 @@
     return bytes;
   }
 
+  function videoMime() {
+    var types = ["video/mp4;codecs=avc1", "video/mp4", "video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"];
+    var i;
+    if (!window.MediaRecorder) return "";
+    for (i = 0; i < types.length; i++) {
+      if (MediaRecorder.isTypeSupported(types[i])) return types[i];
+    }
+    return "";
+  }
+
   document.getElementById("export-video").addEventListener("click", async function () {
     var btn = this;
     var note = document.getElementById("export-note");
+    var mime = videoMime();
+    if (!mime) {
+      note.textContent = "This browser cannot record video.";
+      return;
+    }
     btn.disabled = true;
     var seconds = clamp(document.getElementById("kf-len").value, 1, 8);
     var fps = 12;
@@ -663,9 +675,17 @@
     if (h % 2) h += 1;
     var board = document.createElement("canvas");
     var alpha = live.clear || !live.bg;
+    var pngs = [];
     try {
-      note.textContent = "LOADING ENCODER";
-      var frames = [];
+      var stream = board.captureStream(0);
+      var track = stream.getVideoTracks()[0];
+      var rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 6000000 });
+      var chunks = [];
+      rec.ondataavailable = function (event) {
+        if (event.data && event.data.size) chunks.push(event.data);
+      };
+      var stopped = new Promise(function (resolve) { rec.onstop = resolve; });
+      rec.start();
       var i;
       for (i = 0; i < count; i++) {
         note.textContent = "FRAME " + (i + 1) + " / " + count;
@@ -676,54 +696,25 @@
           paintBlend(board, mix.a, mix.b, mix.t, { w: w, h: h, withImage: mix.a.image || mix.b.image });
         } else {
           var frameState = Object.assign({}, live, { frame: Math.round(u * 100) });
-          alpha = alpha || frameState.clear || !frameState.bg;
+          alpha = frameState.clear || !frameState.bg;
           paint(board, frameState, { w: w, h: h, withImage: frameState.image });
         }
-        frames.push(pngBytes(board.toDataURL("image/png")));
+        if (alpha) pngs.push(pngBytes(board.toDataURL("image/png")));
+        if (track.requestFrame) track.requestFrame();
+        await new Promise(function (resolve) { setTimeout(resolve, 40); });
       }
-      var saved = false;
-      try {
-        var ffmpegMod = await import("https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/esm/index.js");
-        var utilMod = await import("https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.1/dist/esm/index.js");
-        var ffmpeg = new ffmpegMod.FFmpeg();
-        var base = "https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/esm";
-        var worker = "https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/esm/worker.js";
-        var loaded = ffmpeg.load({
-          classWorkerURL: await utilMod.toBlobURL(worker, "text/javascript"),
-          coreURL: await utilMod.toBlobURL(base + "/ffmpeg-core.js", "text/javascript"),
-          wasmURL: await utilMod.toBlobURL(base + "/ffmpeg-core.wasm", "application/wasm")
-        });
-        var timeout = new Promise(function (_, reject) {
-          setTimeout(function () { reject(new Error("encoder timed out")); }, 20000);
-        });
-        await Promise.race([loaded, timeout]);
-        note.textContent = "ENCODING";
-        for (i = 0; i < frames.length; i++) {
-          await ffmpeg.writeFile("f" + String(i + 1).padStart(4, "0") + ".png", frames[i]);
-        }
-        var outName = alpha ? "rhynova.mov" : "rhynova.mp4";
-        var args = alpha
-          ? ["-framerate", String(fps), "-i", "f%04d.png", "-c:v", "qtrle", "-pix_fmt", "argb", outName]
-          : ["-framerate", String(fps), "-i", "f%04d.png", "-c:v", "mpeg4", "-q:v", "4", "-pix_fmt", "yuv420p", outName];
-        await ffmpeg.exec(args);
-        var data = await ffmpeg.readFile(outName);
-        var blob = new Blob([new Uint8Array(data)], { type: alpha ? "video/quicktime" : "video/mp4" });
-        download(outName, URL.createObjectURL(blob));
-        note.textContent = alpha
-          ? "Saved a QuickTime movie with alpha. H.264 MP4 cannot store transparency."
-          : "Saved an MP4. Turn transparent on for an alpha movie.";
-        saved = true;
-      } catch (err) {
-        saved = false;
-      }
-      if (!saved) {
-        download(alpha ? "rhynova-alpha.png" : "rhynova.png", URL.createObjectURL(apngBlob(frames, fps)));
-        note.textContent = alpha
-          ? "Saved an animated PNG with alpha. The MP4 encoder did not load in this browser, and H.264 cannot store transparency."
-          : "Saved an animated PNG. The MP4 encoder did not load in this browser.";
+      rec.stop();
+      await stopped;
+      var ext = mime.indexOf("mp4") >= 0 ? "mp4" : "webm";
+      download("rhynova." + ext, URL.createObjectURL(new Blob(chunks, { type: mime })));
+      if (alpha && pngs.length) {
+        download("rhynova-alpha.png", URL.createObjectURL(apngBlob(pngs, fps)));
+        note.textContent = "Saved ." + ext + " plus an animated PNG with alpha. Browser video cannot store a transparent channel.";
+      } else {
+        note.textContent = "Saved rhynova." + ext + ".";
       }
     } catch (err) {
-      note.textContent = "Video export failed. " + (err && err.message ? err.message : "Encoder unavailable.");
+      note.textContent = "Video export failed. " + (err && err.message ? err.message : "Recorder unavailable.");
     }
     btn.disabled = false;
   });

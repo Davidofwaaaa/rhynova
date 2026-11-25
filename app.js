@@ -21,16 +21,24 @@
   var keys = [];
   var scrubbing = false;
   var wordmark = new Image();
-  wordmark.onload = function () {
-    var copy = document.createElement("canvas");
-    copy.width = wordmark.naturalWidth;
-    copy.height = wordmark.naturalHeight;
-    copy.getContext("2d").drawImage(wordmark, 0, 0);
-    wordmark.dataUrl = copy.toDataURL("image/png");
-    render();
-  };
+  wordmark.onload = function () { render(); };
   wordmark.src = "wordmark.png";
   var MARK = { x: 489, y: 26, size: 76, w: 1024, h: 130 };
+
+  function placeWordmark(ctx, originX, originY, cell) {
+    if (!wordmark.complete || !wordmark.naturalWidth) return;
+    var box = cell * 3;
+    var scale = box / MARK.size;
+    ctx.save();
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    ctx.translate(originX, originY);
+    ctx.scale(scale, scale);
+    ctx.translate(-MARK.x, -MARK.y);
+    ctx.drawImage(wordmark, 0, 0);
+    ctx.restore();
+    ctx.imageSmoothingEnabled = false;
+  }
 
   function clamp(n, min, max) {
     n = Math.round(Number(n));
@@ -206,6 +214,10 @@
     dots.forEach(function (d) {
       ctx.fillRect(lay.ox + d[0] * lay.cell, lay.oy + d[1] * lay.cell, lay.cell, lay.cell);
     });
+    var focal = focalCenter(s);
+    if (s.wordmark) {
+      placeWordmark(ctx, lay.ox + (focal[0] - 1) * lay.cell, lay.oy + (focal[1] - 1) * lay.cell, lay.cell);
+    }
     if (s.crosses) {
       ctx.fillStyle = s.cross;
       Object.keys(plus).forEach(function (key) {
@@ -229,20 +241,6 @@
         ctx.lineTo(lay.ox + s.cols * lay.cell, y);
       }
       ctx.stroke();
-    }
-    if (s.wordmark && wordmark.complete && wordmark.naturalWidth) {
-      var focal = focalCenter(s);
-      var dest = lay.cell * 3;
-      var scale = dest / MARK.size;
-      ctx.imageSmoothingEnabled = true;
-      ctx.drawImage(
-        wordmark,
-        lay.ox + (focal[0] - 1) * lay.cell - MARK.x * scale,
-        lay.oy + (focal[1] - 1) * lay.cell - MARK.y * scale,
-        MARK.w * scale,
-        MARK.h * scale
-      );
-      ctx.imageSmoothingEnabled = false;
     }
     return { lay: lay, plus: plus, dots: dots, blocked: blocked };
   }
@@ -543,16 +541,16 @@
     dots.forEach(function (d) {
       parts.push('<rect x="' + (d[0] * cell) + '" y="' + (d[1] * cell) + '" width="' + cell + '" height="' + cell + '" fill="' + s.dot + '"/>');
     });
+    if (s.wordmark && wordmark.src) {
+      var focal = focalCenter(s);
+      var box = cell * 3;
+      var markScale = box / MARK.size;
+      parts.push('<image href="wordmark.png" x="' + ((focal[0] - 1) * cell - MARK.x * markScale) + '" y="' + ((focal[1] - 1) * cell - MARK.y * markScale) + '" width="' + (MARK.w * markScale) + '" height="' + (MARK.h * markScale) + '" preserveAspectRatio="none"/>');
+    }
     if (s.crosses) Object.keys(plus).forEach(function (key) {
       var p = key.split(",");
       parts.push('<rect x="' + (Number(p[0]) * cell) + '" y="' + (Number(p[1]) * cell) + '" width="' + cell + '" height="' + cell + '" fill="' + s.cross + '"/>');
     });
-    if (s.wordmark && wordmark.dataUrl) {
-      var focal = focalCenter(s);
-      var dest = cell * 3;
-      var markScale = dest / MARK.size;
-      parts.push('<image href="' + wordmark.dataUrl + '" x="' + ((focal[0] - 1) * cell - MARK.x * markScale) + '" y="' + ((focal[1] - 1) * cell - MARK.y * markScale) + '" width="' + (MARK.w * markScale) + '" height="' + (MARK.h * markScale) + '"/>');
-    }
     parts.push("</svg>");
     var blob = new Blob([parts.join("")], { type: "image/svg+xml" });
     var url = URL.createObjectURL(blob);

@@ -1,0 +1,186 @@
+:root {
+  --paper: #ffffff;
+  --ink: #111111;
+  --quiet: #ececec;
+  --line: #111111;
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: ui-monospace, "IBM Plex Mono", monospace;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+
+.sheet {
+  min-height: 100vh;
+  padding: 10px 14px 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.mast {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: end;
+  gap: 12px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 6px;
+  margin-bottom: 12px;
+}
+
+.mark, h1, .mast-note { margin: 0; font-weight: 400; font-size: 11px; }
+h1 { letter-spacing: 0.08em; }
+.mast-note { justify-self: end; text-align: right; }
+
+.columns {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 220px;
+  gap: 16px;
+  align-items: stretch;
+}
+
+.stage-wrap {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+}
+
+.stage {
+  flex: 1;
+  border: 1px solid var(--line);
+  background-color: #fff;
+  background-image:
+    linear-gradient(45deg, #d7d7d7 25%, transparent 25%),
+    linear-gradient(-45deg, #d7d7d7 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #d7d7d7 75%),
+    linear-gradient(-45deg, transparent 75%, #d7d7d7 75%);
+  background-size: 16px 16px;
+  background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: auto;
+  padding: 12px;
+}
+
+.stage.is-solid { background-image: none; }
+
+canvas {
+  display: block;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.panel {
+  min-height: 0;
+  overflow: auto;
+  padding-bottom: 20px;
+}
+
+h2 {
+  margin: 14px 0 6px;
+  padding-bottom: 3px;
+  border-bottom: 1px solid var(--line);
+  font-size: 11px;
+  font-weight: 400;
+}
+
+h2:first-child { margin-top: 0; }
+
+.modes { display: flex; flex-direction: column; }
+
+.modes button,
+#reroll,
+#export-png,
+#export-svg {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 0;
+  padding: 4px 6px;
+  margin-top: -1px;
+}
+
+.modes button[aria-pressed="true"] { background: var(--quiet); }
+
+.field-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+input[type="number"] {
+  width: 64px;
+  text-align: right;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 0;
+  padding: 2px 4px;
+}
+
+input[type="color"] {
+  width: 36px;
+  height: 18px;
+  padding: 0;
+  border: 1px solid var(--line);
+  background: transparent;
+  border-radius: 0;
+}
+
+input[type="range"] {
+  width: 100%;
+  margin: 6px 0 2px;
+  accent-color: var(--ink);
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.check input {
+  appearance: none;
+  width: 9px;
+  height: 9px;
+  margin: 0;
+  border: 1px solid var(--line);
+  background: var(--paper);
+}
+
+.check input:checked { background: var(--ink); }
+
+#reroll { margin-top: 8px; }
+#export-png { margin-top: 0; }
+
+.note { margin: 8px 0 0; }
+
+button:focus-visible,
+input:focus-visible {
+  outline: 1px solid var(--ink);
+  outline-offset: 2px;
+}
+
+@media (max-width: 800px) {
+  .mast { grid-template-columns: 1fr; }
+  .mast-note { justify-self: start; text-align: left; }
+  .columns { grid-template-columns: 1fr; }
+  canvas { max-height: 70vh; }
+  .panel { overflow: visible; }
+}

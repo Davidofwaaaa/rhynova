@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rhynova</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="sheet">
+    <header class="mast">
+      <p class="mark">RHYNOVA</p>
+      <h1>SWISS CROSS</h1>
+      <p class="mast-note" id="readout"></p>
+    </header>
+    <div class="columns">
+      <div class="stage-wrap">
+        <div class="stage" id="stage">
+          <canvas id="board"></canvas>
+        </div>
+      </div>
+      <aside class="panel">
+        <h2>FIELD</h2>
+        <div class="modes" role="group" aria-label="Field mode">
+          <button type="button" id="mode-single" aria-pressed="true">SINGLE / FOCAL</button>
+          <button type="button" id="mode-repeat" aria-pressed="false">REPEATING FIELD</button>
+        </div>
+
+        <h2 class="section">DENSITY</h2>
+        <label class="field-row" for="cell">
+          <span>CELL PX</span>
+          <input id="cell" type="number" min="4" max="80" value="18">
+        </label>
+        <input id="cell-range" type="range" min="4" max="80" value="18" aria-label="Cell size">
+        <label class="field-row" for="cols">
+          <span>COLUMNS</span>
+          <input id="cols" type="number" min="3" max="120" value="24">
+        </label>
+        <label class="field-row" for="rows">
+          <span>ROWS</span>
+          <input id="rows" type="number" min="3" max="120" value="24">
+        </label>
+        <div class="modes" role="group" aria-label="Aspect">
+          <button type="button" data-aspect="1:1" aria-pressed="true">1:1</button>
+          <button type="button" data-aspect="4:5">4:5</button>
+          <button type="button" data-aspect="16:9">16:9</button>
+          <button type="button" data-aspect="custom">CUSTOM W×H</button>
+        </div>
+
+        <h2 class="section">DOTS</h2>
+        <label class="field-row" for="fill">
+          <span>FILL %</span>
+          <input id="fill" type="number" min="0" max="100" value="12">
+        </label>
+        <input id="fill-range" type="range" min="0" max="100" value="12" aria-label="Fill percent">
+        <label class="field-row" for="seed">
+          <span>SEED</span>
+          <input id="seed" type="number" min="0" max="999999" value="24">
+        </label>
+        <button type="button" id="reroll">RE-ROLL</button>
+        <label class="check" for="avoid">
+          <input id="avoid" type="checkbox" checked>
+          <span>AVOID CROSSES</span>
+        </label>
+
+        <h2 class="section">LAYERS</h2>
+        <label class="check" for="show-grid">
+          <input id="show-grid" type="checkbox">
+          <span>GRID LINES</span>
+        </label>
+        <label class="check" for="show-crosses">
+          <input id="show-crosses" type="checkbox" checked>
+          <span>CROSSES</span>
+        </label>
+        <label class="check" for="show-dots">
+          <input id="show-dots" type="checkbox" checked>
+          <span>RANDOM DOTS</span>
+        </label>
+        <label class="check" for="show-bg">
+          <input id="show-bg" type="checkbox" checked>
+          <span>BACKGROUND</span>
+        </label>
+
+        <h2 class="section">COLOR</h2>
+        <label class="field-row" for="color-cross">
+          <span>CROSSES</span>
+          <input id="color-cross" type="color" value="#9a9a9a">
+        </label>
+        <label class="field-row" for="color-dot">
+          <span>DOTS</span>
+          <input id="color-dot" type="color" value="#2b2b2b">
+        </label>
+        <label class="field-row" for="color-bg">
+          <span>BACKGROUND</span>
+          <input id="color-bg" type="color" value="#ffffff">
+        </label>
+
+        <h2 class="section">EXPORT</h2>
+        <button type="button" id="export-png">PNG</button>
+        <button type="button" id="export-svg">SVG</button>
+        <p class="note" id="export-note">Background off exports transparent PNG.</p>
+      </aside>
+    </div>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -16,7 +16,9 @@
     <div class="columns">
       <div class="stage-wrap">
         <div class="stage" id="stage">
-          <canvas id="board"></canvas>
+          <div class="frame" id="frame-box">
+            <canvas id="board"></canvas>
+          </div>
         </div>
       </div>
       <aside class="panel">
@@ -66,12 +68,21 @@
           <span>AVOID CROSSES</span>
         </label>
 
-        <h2 class="section">KEYFRAME</h2>
+        <h2 class="section">DRIFT</h2>
         <label class="field-row" for="frame">
-          <span>FRAME</span>
+          <span>DRIFT</span>
           <input id="frame" type="number" min="0" max="100" value="0">
         </label>
-        <input id="frame-range" type="range" min="0" max="100" value="0" aria-label="Animation keyframe">
+        <input id="frame-range" type="range" min="0" max="100" value="0" aria-label="Dot drift">
+
+        <h2 class="section">KEYFRAMES</h2>
+        <button type="button" id="kf-add">ADD KEYFRAME</button>
+        <ol id="kf-list"></ol>
+        <label class="field-row" for="kf-len">
+          <span>SECONDS</span>
+          <input id="kf-len" type="number" min="1" max="8" value="3">
+        </label>
+        <input id="kf-scrub" type="range" min="0" max="1000" value="0" aria-label="Timeline">
         <button type="button" id="play" aria-pressed="false">PLAY</button>
 
         <h2 class="section">LAYERS</h2>
@@ -90,6 +101,14 @@
         <label class="check" for="show-bg">
           <input id="show-bg" type="checkbox" checked>
           <span>BACKGROUND</span>
+        </label>
+        <label class="check" for="transparent">
+          <input id="transparent" type="checkbox">
+          <span>TRANSPARENT</span>
+        </label>
+        <label class="check" for="show-word">
+          <input id="show-word" type="checkbox">
+          <span>WORDMARK</span>
         </label>
         <label class="check" for="show-image">
           <input id="show-image" type="checkbox">
@@ -117,7 +136,8 @@
         <button type="button" id="export-png">PNG VIEWPORT</button>
         <button type="button" id="export-png-image">PNG WITH IMAGE</button>
         <button type="button" id="export-svg">SVG</button>
-        <p class="note">Viewport exports match the ratio frame. With image includes the photo. SVG is the grid only.</p>
+        <button type="button" id="export-video">VIDEO</button>
+        <p class="note" id="export-note">Transparent export is a QuickTime movie with alpha. A solid background exports an MP4. Add two keyframes to animate between states.</p>
       </aside>
     </div>
   </main>

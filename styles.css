@@ -67,12 +67,49 @@ h1 { letter-spacing: 0.08em; }
   min-height: 0;
 }
 
+.frame {
+  background: #fff;
+  line-height: 0;
+}
+
+.frame.is-clear {
+  background-color: #fff;
+  background-image:
+    linear-gradient(45deg, #d0d0d0 25%, transparent 25%),
+    linear-gradient(-45deg, #d0d0d0 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #d0d0d0 75%),
+    linear-gradient(-45deg, transparent 75%, #d0d0d0 75%);
+  background-size: 16px 16px;
+  background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+}
+
 canvas {
   display: block;
-  background: #fff;
+  background: transparent;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
 }
+
+#kf-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+}
+
+#kf-list li {
+  display: flex;
+  margin-top: -1px;
+}
+
+#kf-list button {
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 0;
+  padding: 4px 6px;
+}
+
+#kf-list .kf-load { flex: 1; text-align: left; }
+#kf-list .kf-del { width: 28px; margin-left: -1px; text-align: center; }
 
 .panel {
   min-height: 0;
@@ -95,10 +132,12 @@ h2:first-child { margin-top: 0; }
 .modes button,
 #reroll,
 #play,
+#kf-add,
 #image-clear,
 #export-png,
 #export-png-image,
 #export-svg,
+#export-video,
 label.file {
   display: block;
   width: 100%;
@@ -166,8 +205,9 @@ input[type="range"] {
 
 .check input:checked { background: var(--ink); }
 
-#reroll, #play, label.file { margin-top: 8px; }
+#reroll, #play, #kf-add, label.file { margin-top: 8px; }
 #export-png { margin-top: 0; }
+#export-video:disabled { opacity: 0.35; cursor: default; }
 
 .note { margin: 6px 0 0; }
 

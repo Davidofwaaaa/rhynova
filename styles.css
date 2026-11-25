@@ -18,11 +18,11 @@ html, body {
   line-height: 1.35;
 }
 
-button, input { font: inherit; color: inherit; }
-button { cursor: pointer; }
+button, input, label.file { font: inherit; color: inherit; }
+button, label.file { cursor: pointer; }
 
 .sheet {
-  min-height: 100vh;
+  height: 100vh;
   padding: 10px 14px 16px;
   display: flex;
   flex-direction: column;
@@ -59,26 +59,17 @@ h1 { letter-spacing: 0.08em; }
 
 .stage {
   flex: 1;
-  border: 1px solid var(--line);
-  background-color: #fff;
-  background-image:
-    linear-gradient(45deg, #d7d7d7 25%, transparent 25%),
-    linear-gradient(-45deg, #d7d7d7 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, #d7d7d7 75%),
-    linear-gradient(-45deg, transparent 75%, #d7d7d7 75%);
-  background-size: 16px 16px;
-  background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+  background: #000;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: auto;
-  padding: 12px;
+  overflow: hidden;
+  min-height: 0;
 }
-
-.stage.is-solid { background-image: none; }
 
 canvas {
   display: block;
+  background: #fff;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
 }
@@ -86,7 +77,7 @@ canvas {
 .panel {
   min-height: 0;
   overflow: auto;
-  padding-bottom: 20px;
+  padding-bottom: 28px;
 }
 
 h2 {
@@ -103,8 +94,13 @@ h2:first-child { margin-top: 0; }
 
 .modes button,
 #reroll,
+#play,
+#image-clear,
 #export-png,
-#export-svg {
+#export-png-image,
+#export-svg,
+label.file {
+  display: block;
   width: 100%;
   text-align: left;
   background: transparent;
@@ -114,7 +110,11 @@ h2:first-child { margin-top: 0; }
   margin-top: -1px;
 }
 
-.modes button[aria-pressed="true"] { background: var(--quiet); }
+.modes button[aria-pressed="true"],
+#play[aria-pressed="true"] { background: var(--quiet); }
+
+button:disabled,
+label.file:disabled { opacity: 0.35; }
 
 .field-row {
   display: flex;
@@ -166,21 +166,23 @@ input[type="range"] {
 
 .check input:checked { background: var(--ink); }
 
-#reroll { margin-top: 8px; }
+#reroll, #play, label.file { margin-top: 8px; }
 #export-png { margin-top: 0; }
 
-.note { margin: 8px 0 0; }
+.note { margin: 6px 0 0; }
 
 button:focus-visible,
-input:focus-visible {
+input:focus-visible,
+label.file:focus-visible {
   outline: 1px solid var(--ink);
   outline-offset: 2px;
 }
 
 @media (max-width: 800px) {
+  .sheet { height: auto; min-height: 100vh; }
   .mast { grid-template-columns: 1fr; }
   .mast-note { justify-self: start; text-align: left; }
   .columns { grid-template-columns: 1fr; }
-  canvas { max-height: 70vh; }
+  .stage { height: 70vh; }
   .panel { overflow: visible; }
 }
